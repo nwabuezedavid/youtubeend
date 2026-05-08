@@ -6,6 +6,28 @@ from pytubefix import YouTube
 
 class handler(BaseHTTPRequestHandler):
 
+    # HANDLE CORS
+    def do_OPTIONS(self):
+
+        self.send_response(200)
+
+        self.send_header(
+            "Access-Control-Allow-Origin",
+            "*"
+        )
+
+        self.send_header(
+            "Access-Control-Allow-Methods",
+            "POST, OPTIONS"
+        )
+
+        self.send_header(
+            "Access-Control-Allow-Headers",
+            "Content-Type"
+        )
+
+        self.end_headers()
+
     def do_POST(self):
 
         try:
@@ -30,6 +52,11 @@ class handler(BaseHTTPRequestHandler):
                     "application/json"
                 )
 
+                self.send_header(
+                    "Access-Control-Allow-Origin",
+                    "*"
+                )
+
                 self.end_headers()
 
                 self.wfile.write(
@@ -41,23 +68,25 @@ class handler(BaseHTTPRequestHandler):
 
                 return
 
-            # GET VIDEO
             yt = YouTube(url)
 
             stream = yt.streams.get_highest_resolution()
 
-            # FETCH VIDEO BINARY
             video_response = requests.get(
                 stream.url,
                 stream=True
             )
 
-            # SEND VIDEO DIRECTLY
             self.send_response(200)
 
             self.send_header(
                 "Content-Type",
                 "video/mp4"
+            )
+
+            self.send_header(
+                "Access-Control-Allow-Origin",
+                "*"
             )
 
             self.send_header(
@@ -67,7 +96,6 @@ class handler(BaseHTTPRequestHandler):
 
             self.end_headers()
 
-            # STREAM VIDEO
             for chunk in video_response.iter_content(
                 chunk_size=1024 * 1024
             ):
@@ -82,6 +110,11 @@ class handler(BaseHTTPRequestHandler):
             self.send_header(
                 "Content-type",
                 "application/json"
+            )
+
+            self.send_header(
+                "Access-Control-Allow-Origin",
+                "*"
             )
 
             self.end_headers()
