@@ -54,14 +54,26 @@ class handler(BaseHTTPRequestHandler):
 
             # GET VIDEO INFO
             command = [
-                "yt-dlp",
-                "--cookies",
-                "cookies.txt",
-                "-f",
-                "best",
-                "-g",
-                url
-            ]
+    "python",
+    "-m",
+    "yt_dlp",
+
+    "--cookies",
+    "cookies.txt",
+
+    "--user-agent",
+    "Mozilla/5.0",
+
+    "--extractor-args",
+    "youtube:player_client=android",
+
+    "-f",
+    "best",
+
+    "-g",
+
+    url
+]
 
             result = subprocess.check_output(
                 command
