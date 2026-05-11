@@ -1,7 +1,6 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import subprocess
-import re
 
 
 class handler(BaseHTTPRequestHandler):
@@ -52,28 +51,27 @@ class handler(BaseHTTPRequestHandler):
                     "No URL provided"
                 )
 
-            # GET VIDEO INFO
             command = [
-    "python",
-    "-m",
-    "yt_dlp",
+                "python",
+                "-m",
+                "yt_dlp",
 
-    "--cookies",
-    "cookies.txt",
+                "--cookies",
+                "cookies.txt",
 
-    "--user-agent",
-    "Mozilla/5.0",
+                "--user-agent",
+                "Mozilla/5.0",
 
-    "--extractor-args",
-    "youtube:player_client=android",
+                "--extractor-args",
+                "youtube:player_client=android",
 
-    "-f",
-    "best",
+                "-f",
+                "best",
 
-    "-g",
+                "-g",
 
-    url
-]
+                url
+            ]
 
             result = subprocess.check_output(
                 command
