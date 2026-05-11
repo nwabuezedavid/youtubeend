@@ -1,15 +1,11 @@
 from http.server import BaseHTTPRequestHandler
 import json
+import subprocess
 import re
-from pytubefix import YouTube
-from pytubefix.cli import on_progress
 
 
 class handler(BaseHTTPRequestHandler):
 
-    # =========================
-    # CORS
-    # =========================
     def do_OPTIONS(self):
 
         self.send_response(200)
@@ -31,42 +27,10 @@ class handler(BaseHTTPRequestHandler):
 
         self.end_headers()
 
-    # =========================
-    # GET
-    # =========================
-    def do_GET(self):
-
-        self.send_response(200)
-
-        self.send_header(
-            "Content-Type",
-            "application/json"
-        )
-
-        self.send_header(
-            "Access-Control-Allow-Origin",
-            "*"
-        )
-
-        self.end_headers()
-
-        self.wfile.write(
-            json.dumps({
-                "success": True,
-                "message": "API running"
-            }).encode("utf-8")
-        )
-
-    # =========================
-    # POST
-    # =========================
     def do_POST(self):
 
         try:
 
-            # -------------------------
-            # BODY
-            # -------------------------
             content_length = int(
                 self.headers.get(
                     "Content-Length",
@@ -78,17 +42,8 @@ class handler(BaseHTTPRequestHandler):
                 content_length
             ).decode("utf-8")
 
-            if not body:
-
-                raise Exception(
-                    "Request body is empty"
-                )
-
             data = json.loads(body)
 
-            # -------------------------
-            # URL
-            # -------------------------
             url = data.get("url")
 
             if not url:
@@ -97,51 +52,26 @@ class handler(BaseHTTPRequestHandler):
                     "No URL provided"
                 )
 
-            # -------------------------
-            # YOUTUBE
-            # -------------------------
-            yt = YouTube(
-                url,
-                on_progress_callback=on_progress,
-                use_po_token=True
-            )
+            # GET VIDEO INFO
+            command = [
+                "yt-dlp",
+                "--cookies",
+                "cookies.txt",
+                "-f",
+                "best",
+                "-g",
+                url
+            ]
 
-            # -------------------------
-            # STREAM
-            # -------------------------
-            stream = yt.streams.get_highest_resolution()
+            result = subprocess.check_output(
+                command
+            ).decode("utf-8").strip()
 
-            if not stream:
-
-                raise Exception(
-                    "No stream found"
-                )
-
-            # -------------------------
-            # SAFE TITLE
-            # -------------------------
-            safe_title = re.sub(
-                r'[\\\\/*?:"<>|]',
-                "",
-                yt.title
-            )
-
-            # -------------------------
-            # RESPONSE
-            # -------------------------
             response = {
                 "success": True,
-                "title": safe_title,
-                "download_url": stream.url,
-                "thumbnail": yt.thumbnail_url,
-                "author": yt.author,
-                "length": yt.length,
-                "views": yt.views
+                "download_url": result
             }
 
-            # -------------------------
-            # SEND RESPONSE
-            # -------------------------
             self.send_response(200)
 
             self.send_header(
