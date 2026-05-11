@@ -1,14 +1,12 @@
 from http.server import BaseHTTPRequestHandler
 import json
-import re
+import requests
 from pytubefix import YouTube
 
 
 class handler(BaseHTTPRequestHandler):
 
-    # =========================
     # HANDLE CORS
-    # =========================
     def do_OPTIONS(self):
 
         self.send_response(200)
@@ -30,36 +28,27 @@ class handler(BaseHTTPRequestHandler):
 
         self.end_headers()
 
-    # =========================
-    # HANDLE POST REQUEST
-    # =========================
     def do_POST(self):
 
         try:
-
-            # GET BODY LENGTH
             content_length = int(
-                self.headers.get('Content-Length', 0)
+                self.headers['Content-Length']
             )
 
-            # READ BODY
             body = self.rfile.read(
                 content_length
             )
 
-            # PARSE JSON
             data = json.loads(body)
 
-            # GET URL
             url = data.get("url")
 
-            # VALIDATE URL
             if not url:
 
                 self.send_response(400)
 
                 self.send_header(
-                    "Content-Type",
+                    "Content-type",
                     "application/json"
                 )
 
@@ -79,35 +68,20 @@ class handler(BaseHTTPRequestHandler):
 
                 return
 
-            # CREATE YOUTUBE OBJECT
             yt = YouTube(url)
 
-            # GET HIGHEST QUALITY STREAM
             stream = yt.streams.get_highest_resolution()
 
-            # CLEAN FILE NAME
-            safe_title = re.sub(
-                r'[\\\\/*?:"<>|]',
-                "",
-                yt.title
+            video_response = requests.get(
+                stream.url,
+                stream=True
             )
 
-            # RESPONSE
-            response = {
-                "success": True,
-                "title": safe_title,
-                "download_url": stream.url,
-                "thumbnail": yt.thumbnail_url,
-                "author": yt.author,
-                "length": yt.length
-            }
-
-            # SEND SUCCESS RESPONSE
             self.send_response(200)
 
             self.send_header(
                 "Content-Type",
-                "application/json"
+                "video/mp4"
             )
 
             self.send_header(
@@ -115,19 +89,26 @@ class handler(BaseHTTPRequestHandler):
                 "*"
             )
 
+            self.send_header(
+                "Content-Disposition",
+                f'attachment; filename="{yt.title}.mp4"'
+            )
+
             self.end_headers()
 
-            self.wfile.write(
-                json.dumps(response).encode()
-            )
+            for chunk in video_response.iter_content(
+                chunk_size=1024 * 1024
+            ):
+
+                if chunk:
+                    self.wfile.write(chunk)
 
         except Exception as e:
 
-            # ERROR RESPONSE
             self.send_response(500)
 
             self.send_header(
-                "Content-Type",
+                "Content-type",
                 "application/json"
             )
 
@@ -144,3 +125,7 @@ class handler(BaseHTTPRequestHandler):
                     "error": str(e)
                 }).encode()
             )
+
+
+
+            
