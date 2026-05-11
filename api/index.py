@@ -2,6 +2,7 @@ from http.server import BaseHTTPRequestHandler
 import json
 import re
 from pytubefix import YouTube
+from pytubefix.cli import on_progress
 
 
 class handler(BaseHTTPRequestHandler):
@@ -31,7 +32,7 @@ class handler(BaseHTTPRequestHandler):
         self.end_headers()
 
     # =========================
-    # GET REQUEST
+    # GET
     # =========================
     def do_GET(self):
 
@@ -52,19 +53,19 @@ class handler(BaseHTTPRequestHandler):
         self.wfile.write(
             json.dumps({
                 "success": True,
-                "message": "YouTube Downloader API is running"
+                "message": "API running"
             }).encode("utf-8")
         )
 
     # =========================
-    # POST REQUEST
+    # POST
     # =========================
     def do_POST(self):
 
         try:
 
             # -------------------------
-            # READ REQUEST BODY
+            # BODY
             # -------------------------
             content_length = int(
                 self.headers.get(
@@ -77,68 +78,47 @@ class handler(BaseHTTPRequestHandler):
                 content_length
             ).decode("utf-8")
 
-            # -------------------------
-            # CHECK EMPTY BODY
-            # -------------------------
             if not body:
 
                 raise Exception(
                     "Request body is empty"
                 )
 
-            # -------------------------
-            # PARSE JSON
-            # -------------------------
             data = json.loads(body)
 
             # -------------------------
-            # GET URL
+            # URL
             # -------------------------
             url = data.get("url")
 
             if not url:
 
-                self.send_response(400)
-
-                self.send_header(
-                    "Content-Type",
-                    "application/json"
+                raise Exception(
+                    "No URL provided"
                 )
 
-                self.send_header(
-                    "Access-Control-Allow-Origin",
-                    "*"
-                )
-
-                self.end_headers()
-
-                self.wfile.write(
-                    json.dumps({
-                        "success": False,
-                        "error": "No URL provided"
-                    }).encode("utf-8")
-                )
-
-                return
+            # -------------------------
+            # YOUTUBE
+            # -------------------------
+            yt = YouTube(
+                url,
+                on_progress_callback=on_progress,
+                use_po_token=True
+            )
 
             # -------------------------
-            # LOAD YOUTUBE VIDEO
-            # -------------------------
-            yt = YouTube(url)
-
-            # -------------------------
-            # GET BEST STREAM
+            # STREAM
             # -------------------------
             stream = yt.streams.get_highest_resolution()
 
             if not stream:
 
                 raise Exception(
-                    "No downloadable stream found"
+                    "No stream found"
                 )
 
             # -------------------------
-            # CLEAN TITLE
+            # SAFE TITLE
             # -------------------------
             safe_title = re.sub(
                 r'[\\\\/*?:"<>|]',
@@ -147,7 +127,7 @@ class handler(BaseHTTPRequestHandler):
             )
 
             # -------------------------
-            # RESPONSE DATA
+            # RESPONSE
             # -------------------------
             response = {
                 "success": True,
@@ -160,7 +140,7 @@ class handler(BaseHTTPRequestHandler):
             }
 
             # -------------------------
-            # SUCCESS RESPONSE
+            # SEND RESPONSE
             # -------------------------
             self.send_response(200)
 
@@ -178,29 +158,6 @@ class handler(BaseHTTPRequestHandler):
 
             self.wfile.write(
                 json.dumps(response).encode("utf-8")
-            )
-
-        except json.JSONDecodeError:
-
-            self.send_response(400)
-
-            self.send_header(
-                "Content-Type",
-                "application/json"
-            )
-
-            self.send_header(
-                "Access-Control-Allow-Origin",
-                "*"
-            )
-
-            self.end_headers()
-
-            self.wfile.write(
-                json.dumps({
-                    "success": False,
-                    "error": "Invalid JSON body"
-                }).encode("utf-8")
             )
 
         except Exception as e:
