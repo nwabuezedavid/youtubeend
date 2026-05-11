@@ -1,22 +1,14 @@
 {
-  "name": "apitude",
+  "name": "youtube-downloader-api",
   "version": "1.0.0",
-  "description": "downloadyoutube vide",
-  "homepage": "https://github.com/nwabuezedavid/youtubeend#readme",
-  "bugs": {
-    "url": "https://github.com/nwabuezedavid/youtubeend/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/nwabuezedavid/youtubeend.git"
-  },
-  "license": "ISC",
-  "author": "",
-  "type": "commonjs",
+  "description": "YouTube downloader API",
   "main": "index.js",
+  "license": "ISC",
+
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node api/youtube.js"
   },
+
   "dependencies": {
     "@distube/ytdl-core": "^4.16.12"
   }
