@@ -137,4 +137,4 @@ class handler(BaseHTTPRequestHandler):
                     "success": False,
                     "error": str(e)
                 }).encode("utf-8")
-            )s
+            )
