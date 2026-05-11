@@ -30,6 +30,7 @@ class handler(BaseHTTPRequestHandler):
 
         try:
 
+            # READ BODY
             content_length = int(
                 self.headers.get(
                     "Content-Length",
@@ -51,6 +52,7 @@ class handler(BaseHTTPRequestHandler):
                     "No URL provided"
                 )
 
+            # COMMAND
             command = [
                 "python",
                 "-m",
@@ -73,13 +75,27 @@ class handler(BaseHTTPRequestHandler):
                 url
             ]
 
-            result = subprocess.check_output(
-                command
-            ).decode("utf-8").strip()
+            # RUN COMMAND
+            result = subprocess.run(
+                command,
+                capture_output=True,
+                text=True
+            )
 
+            # CHECK ERROR
+            if result.returncode != 0:
+
+                raise Exception(
+                    result.stderr
+                )
+
+            # VIDEO URL
+            video_url = result.stdout.strip()
+
+            # RESPONSE
             response = {
                 "success": True,
-                "download_url": result
+                "download_url": video_url
             }
 
             self.send_response(200)
@@ -121,4 +137,4 @@ class handler(BaseHTTPRequestHandler):
                     "success": False,
                     "error": str(e)
                 }).encode("utf-8")
-            )
+            )s
