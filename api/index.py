@@ -1,6 +1,7 @@
 from http.server import BaseHTTPRequestHandler
 import json
 import subprocess
+import shutil
 
 
 class handler(BaseHTTPRequestHandler):
@@ -30,7 +31,9 @@ class handler(BaseHTTPRequestHandler):
 
         try:
 
+            # =========================
             # READ BODY
+            # =========================
             content_length = int(
                 self.headers.get(
                     "Content-Length",
@@ -52,47 +55,58 @@ class handler(BaseHTTPRequestHandler):
                     "No URL provided"
                 )
 
+            # =========================
+            # COPY COOKIES TO /tmp
+            # =========================
+            shutil.copy(
+                "cookies.txt",
+                "/tmp/cookies.txt"
+            )
+
+            # =========================
             # COMMAND
+            # =========================
             command = [
                 "python",
                 "-m",
                 "yt_dlp",
 
                 "--cookies",
-                "cookies.txt",
+                "/tmp/cookies.txt",
+
+                "--no-cache-dir",
 
                 "--user-agent",
                 "Mozilla/5.0",
-
-                "--extractor-args",
-                "youtube:player_client=android",
-
-                "-f",
-                "best",
 
                 "-g",
 
                 url
             ]
 
-            # RUN COMMAND
+            # =========================
+            # RUN
+            # =========================
             result = subprocess.run(
                 command,
                 capture_output=True,
                 text=True
             )
 
-            # CHECK ERROR
             if result.returncode != 0:
 
                 raise Exception(
                     result.stderr
                 )
 
+            # =========================
             # VIDEO URL
+            # =========================
             video_url = result.stdout.strip()
 
+            # =========================
             # RESPONSE
+            # =========================
             response = {
                 "success": True,
                 "download_url": video_url
