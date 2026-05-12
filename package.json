@@ -4,12 +4,11 @@
   "description": "YouTube downloader API",
   "main": "index.js",
   "license": "ISC",
-
   "scripts": {
     "start": "node api/youtube.js"
   },
-
   "dependencies": {
-    "@distube/ytdl-core": "^4.16.12"
+    "@distube/ytdl-core": "^4.16.12",
+    "youtube-dl-exec": "^3.1.6"
   }
 }
